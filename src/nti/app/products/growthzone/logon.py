@@ -65,13 +65,13 @@ from nti.links.links import Link
 
 logger = __import__('logging').getLogger(__name__)
 
-#: The initial SALESFORCE login rel
-REL_LOGIN_SALESFORCE = 'logon.growthzone'
+#: The initial GROWTHZONE login rel
+REL_LOGIN_GROWTHZONE = 'logon.growthzone'
 
-#: The redirect rel after SALESFORCE auth
-LOGON_SALESFORCE = 'logon.growthzone.oauth2'
+#: The redirect rel after GROWTHZONE auth
+LOGON_GROWTHZONE = 'logon.growthzone.oauth2'
 
-SALESFORCE_RETURN_URL_PARAM = 'redirect_uri'
+GROWTHZONE_RETURN_URL_PARAM = 'redirect_uri'
 
 # Saw timeouts at 1 second
 _REQUEST_TIMEOUT = 4.0
@@ -82,7 +82,7 @@ def redirect_growthzone_uri(request):
     root = root[:-1] if root.endswith('/') else root
     target = urllib_parse.urljoin(request.application_url, root)
     target = target + '/' if not target.endswith('/') else target
-    target = urllib_parse.urljoin(target, LOGON_SALESFORCE)
+    target = urllib_parse.urljoin(target, LOGON_GROWTHZONE)
     return target
 
 
@@ -92,7 +92,7 @@ def redirect_growthzone2_params(request, state=None):
     params = {'state': state,
               'response_type': 'code',
               'client_id': auth_settings.client_id,
-               SALESFORCE_RETURN_URL_PARAM: redirect_growthzone_uri(request)}
+               GROWTHZONE_RETURN_URL_PARAM: redirect_growthzone_uri(request)}
     return params
 
 
@@ -107,7 +107,7 @@ def _get_auth_url():
     return auth_url[:-1] if auth_url.endswith('/') else auth_url
 
 
-@view_config(name=REL_LOGIN_SALESFORCE,
+@view_config(name=REL_LOGIN_GROWTHZONE,
              route_name='objects.generic.traversal',
              context=IDataserverFolder,
              request_method='GET',
@@ -137,7 +137,7 @@ def _return_url(request, url_type='success'):
     return request.session.get('growthzone.' + url_type)
 
 
-@view_config(name=LOGON_SALESFORCE,
+@view_config(name=LOGON_GROWTHZONE,
              route_name='objects.generic.traversal',
              context=IDataserverFolder,
              request_method='GET',
@@ -178,7 +178,7 @@ def growthzone_oauth2(request):
     data = {'grant_type': 'authorization_code',
             'client_id': auth_settings.client_id,
             'client_secret': auth_settings.client_secret,
-             SALESFORCE_RETURN_URL_PARAM: redirect_growthzone_uri(request),
+             GROWTHZONE_RETURN_URL_PARAM: redirect_growthzone_uri(request),
             'code': code}
     auth = requests.post(auth_settings.token_url,
                          data=data,
@@ -269,7 +269,7 @@ def growthzone_oauth2(request):
 @interface.implementer(IUnauthenticatedUserLinkProvider)
 class SimpleUnauthenticatedUserGrowthZoneLinkProvider(object):
 
-    rel = REL_LOGIN_SALESFORCE
+    rel = REL_LOGIN_GROWTHZONE
 
     default_title = _('Logon through GrowthZone')
 

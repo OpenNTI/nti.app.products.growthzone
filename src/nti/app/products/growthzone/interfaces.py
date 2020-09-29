@@ -71,7 +71,7 @@ class GrowthZoneUserCreatedEvent(ObjectEvent):
 
 class IGrowthZoneUserLogonEvent(IObjectEvent):
     """
-    Fired after an salesforce user has logged on
+    Fired after an growthzone user has logged on
     """
     request = Attribute(u"Request")
 
