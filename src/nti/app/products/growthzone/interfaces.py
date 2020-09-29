@@ -17,6 +17,7 @@ from zope.interface import Attribute
 from zope.interface.interfaces import ObjectEvent
 from zope.interface.interfaces import IObjectEvent
 
+from nti.schema.field import HTTPURL
 from nti.schema.field import ValidTextLine as TextLine
 
 
@@ -26,11 +27,31 @@ class IGrowthZoneUser(interface.Interface):
     """
 
 
+class IGrowthZoneUserProfile(interface.Interface):
+    """
+    Marker interface for a user created via GrowthZone.
+    """
+
+
 class IGrowthZoneLogonSettings(interface.Interface):
 
-    api_endpoint = TextLine(title=u"The growthzone API url", required=True)
+    client_id = TextLine(title=u'The OAuth2 client id',
+                         required=True)
 
-    api_key = TextLine(title=u"The growthzone api key", required=True)
+    client_secret = TextLine(title=u'The OAuth2 client secret',
+                             required=True)
+
+    login_url = HTTPURL(title=u'The url the client should be sent to in order to initiate the log in process',
+                        required=True)
+
+    token_url = HTTPURL(title=u'The token url',
+                        required=True)
+
+    user_info_url = HTTPURL(title=u'The url to fetch user information',
+                            required=True)
+
+    logon_link_title = TextLine(title=u'The logon link title',
+                                required=False)
 
 
 class IGrowthZoneUserCreatedEvent(IObjectEvent):
@@ -48,33 +69,18 @@ class GrowthZoneUserCreatedEvent(ObjectEvent):
         self.request = request
 
 
-class GrowthZoneException(Exception):
+class IGrowthZoneUserLogonEvent(IObjectEvent):
     """
-    A generic growthzone API exception.
+    Fired after an salesforce user has logged on
     """
+    request = Attribute(u"Request")
 
 
-class GrowthZoneSessionException(GrowthZoneException):
-    """
-    A growthzone API error when fetching a session.
-    """
+@interface.implementer(IGrowthZoneUserLogonEvent)
+class GrowthZoneUserLogonEvent(ObjectEvent):
 
+    def __init__(self, obj, external_values=None, request=None):
+        super(GrowthZoneUserLogonEvent, self).__init__(obj)
+        self.request = request
+        self.external_values = external_values or {}
 
-class GrowthZoneAuthTokenException(GrowthZoneException):
-    """
-    A growthzone API error when fetching an auth token.
-    """
-
-
-class GrowthZoneUserInfoException(GrowthZoneException):
-    """
-    An exception indicating we received an error when fetching GrowthZone
-    user info.
-    """
-
-
-class GrowthZoneUserInfoNotFoundException(GrowthZoneUserInfoException):
-    """
-    An exception indicating we received a user info response but no user info
-    data.
-    """

@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from zope import interface
 
-from nti.app.products.GrowthZone.interfaces import IGrowthZoneLogonSettings
+from nti.app.products.growthzone.interfaces import IGrowthZoneLogonSettings
 
 from nti.schema.eqhash import EqHash
 
@@ -21,11 +21,11 @@ from nti.schema.schema import SchemaConfigured
 logger = __import__('logging').getLogger(__name__)
 
 
-@EqHash('api_endpoint', 'api_key')
+@EqHash('client_id')
 @interface.implementer(IGrowthZoneLogonSettings)
 class GrowthZoneLogonSettings(SchemaConfigured):
     createDirectFieldProperties(IGrowthZoneLogonSettings)
 
     def __str__(self):
         # pylint: disable=no-member
-        return self.api_endpoint
+        return self.client_id
