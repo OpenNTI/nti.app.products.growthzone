@@ -1,0 +1,10 @@
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:meta="http://namespaces.zope.org/meta">
+
+	<meta:directives namespace="http://nextthought.com/ntp/growthzone">
+		<meta:directive	name="registerGrowthZoneLogonSettings"
+						schema=".zcml.IRegisterGrowthZoneLogonSettings"
+						handler=".zcml.registerGrowthZoneLogonSettings" />
+	</meta:directives>
+
+</configure>
