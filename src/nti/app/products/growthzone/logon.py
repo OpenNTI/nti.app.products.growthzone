@@ -87,11 +87,17 @@ def redirect_growthzone_uri(request):
 
 
 def redirect_growthzone2_params(request, state=None):
+    """
+        https://growthzoneapp.com/oauth/authorize?client_id=12345 &response_type=code
+    &response_mode=form_post &redirect_uri=http://example.com/openid/callback &scope=openid+profile+email
+    &state=jd8Udndha7d &nonce=93kdjdf873jdnfbnyhsgbdk
+    """
     state = state or hashlib.sha256(os.urandom(1024)).hexdigest()
     auth_settings = component.getUtility(IGrowthZoneLogonSettings)
     params = {'state': state,
               'response_type': 'code',
               'client_id': auth_settings.client_id,
+              'scope': 'openid+profile+email',
                GROWTHZONE_RETURN_URL_PARAM: redirect_growthzone_uri(request)}
     return params
 
@@ -140,10 +146,11 @@ def _return_url(request, url_type='success'):
 @view_config(name=LOGON_GROWTHZONE,
              route_name='objects.generic.traversal',
              context=IDataserverFolder,
-             request_method='GET',
+             request_method='POST',
              renderer='rest')
 def growthzone_oauth2(request):
-    params = request.params
+    params = dict(request.POST or {})
+    params.update(request.params or {})
     # check for errors
     if 'error' in params or 'errorCode' in params:
         error = params.get('error') or params.get('errorCode')
@@ -157,16 +164,14 @@ def growthzone_oauth2(request):
         return _create_failure_response(request,
                                         _return_url(request, 'failure'),
                                         error=_(u'Missing state.'))
-    if 'state' in params:
-        params_state = params.get('state')
-        session_state = request.session.get('growthzone.state')
-        if params_state != session_state:
-            return _create_failure_response(request,
-                                            _return_url(request, 'failure'),
-                                            error=_(u'Incorrect state values.'))
+    params_state = params.get('state', None)
+    session_state = request.session.get('growthzone.state')
+    if params_state != session_state:
+        return _create_failure_response(request,
+                                        _return_url(request, 'failure'),
+                                        error=_(u'Incorrect state values.'))
 
     code = params.get('code')
-
     if not code:
         logger.warn('GrowthZone code not found after oauth')
         return _create_failure_response(request,
@@ -201,8 +206,7 @@ def growthzone_oauth2(request):
     try:
         logger.debug("Getting user profile")
         response = requests.get(auth_settings.user_info_url,
-                                params={"access_token": access_token,
-                                        "format": "json"})
+                                headers={'Authorization': 'Bearer %s' % access_token})
 
         try:
             response.raise_for_status()
@@ -224,22 +228,23 @@ def growthzone_oauth2(request):
                                                 'growthzone.failure'),
                                             error=_(u'Invalid user info.'))
         if     not user_info.get('email') \
-            or not user_info.get('name') \
-            or not user_info.get('user_id'):
+            or not user_info.get('given_name') \
+            or not user_info.get('family_name') \
+            or not user_info.get('sub'):
                 logger.exception("Invalid growthzone user info (%s)", user_info)
                 return _create_failure_response(request,
                                                 request.cookies.get('growthzone.failure'),
                                                 error=_(u'Invalid user info.'))
-        external_id = str(user_info.get('user_id'))
+        external_id = str(user_info.get('sub'))
         user = get_user_for_growthzone_id(external_id)
         if user is None:
             username = generate_username()
             interface.alsoProvides(request, INoAccountCreationEmail)
             user = _deal_with_external_account(request,
-                                               fname=None,
-                                               lname=None,
+                                               fname=user_info.get('given_name'),
+                                               lname=user_info.get('family_name'),
                                                username=username,
-                                               realname=user_info.get('name'),
+                                               realname=None,
                                                email=user_info.get('email'),
                                                idurl=None,
                                                iface=None,
