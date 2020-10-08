@@ -71,17 +71,12 @@ class IRegisterGrowthZoneLogonSettings(interface.Interface):
     logon_link_title = TextLine(title=u'The logon link title',
                                 required=False)
 
-    disable_account_creation = Bool(title=u'Whether to disable platform account creation',
-                                    default=True,
-                                    required=False)
-
 
 def registerGrowthZoneLogonSettings(_context, client_id,
                                     client_secret,
                                     login_url,
                                     user_info_url,
-                                    token_url, logon_link_title,
-                                    disable_account_creation):
+                                    token_url, logon_link_title):
     """
     Register growthzone logon settings, including link providers. Disables
     account creation if necessary.
@@ -101,13 +96,3 @@ def registerGrowthZoneLogonSettings(_context, client_id,
     subscriber(_context, provides=IUnauthenticatedUserLinkProvider,
                for_=(IRequest,),
                factory=SimpleUnauthenticatedUserGrowthZoneLinkProvider)
-
-    if disable_account_creation:
-        for name, factory in (("account.create", DenyAccountCreatePathAdapter),
-                              ("account.preflight.create", DenyAccountCreatePreflightPathAdapter)):
-            adapter(_context,
-                    name=name,
-                    for_=(IDataserverFolder, IRequest),
-                    factory=(factory,),
-                    provides=IPathAdapter)
-

@@ -46,8 +46,7 @@ ZCML_STRING = """
                                                     login_url="https://login.growthzone.com/services/oauth2/authorize"
                                                     token_url="https://login.growthzone.com/services/oauth2/token"
                                                     user_info_url="https://login.growthzone.com/services/oauth2/userinfo"
-                                                    logon_link_title="logon link title"
-                                                    disable_account_creation="true" />
+                                                    logon_link_title="logon link title"/>
     </configure>
 </configure>
 """
