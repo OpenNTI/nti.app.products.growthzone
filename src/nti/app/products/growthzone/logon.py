@@ -98,7 +98,7 @@ def redirect_growthzone2_params(request, state=None):
               'response_type': 'code',
               'response_mode': 'form_post',
               'client_id': auth_settings.client_id,
-              'scope': 'openid+profile+email',
+              'scope': 'openid profile email',
                GROWTHZONE_RETURN_URL_PARAM: redirect_growthzone_uri(request)}
     return params
 
