@@ -44,6 +44,7 @@ from nti.app.products.growthzone.utils import get_user_for_growthzone_id
 
 from nti.appserver.interfaces import IMissingUser
 from nti.appserver.interfaces import ILogonLinkProvider
+from nti.appserver.interfaces import AmbiguousUserLookupError
 from nti.appserver.interfaces import IUnauthenticatedUserLinkProvider
 
 from nti.appserver.logon import _create_success_response
@@ -60,6 +61,7 @@ from nti.dataserver.users.interfaces import IUsernameGeneratorUtility
 from nti.dataserver.users.users import User
 
 from nti.dataserver.users.utils import force_email_verification
+from nti.dataserver.users.utils import get_users_by_email_in_sites
 
 from nti.links.links import Link
 
@@ -142,6 +144,29 @@ def _return_url(request, url_type='success'):
     if url_type in request.params:
         return request.params.get(url_type)
     return request.session.get('growthzone.' + url_type)
+
+
+def _get_user(external_id, email):
+    """
+    Get user by external id. If a user is not found, we try to find a unique
+    user by email.
+
+    Raises a `AmbiguousUserLookupError` if multiple users are found for an
+    email address.
+    """
+    user = get_user_for_growthzone_id(external_id)
+    if user is None:
+        found_users = get_users_by_email_in_sites(email)
+        if found_users:
+            if len(found_users) > 1:
+                logger.info("Cannot link growthzone account by email (%s) (%s)",
+                            email, found_users)
+                raise AmbiguousUserLookupError()
+            else:
+                user = found_users[0]
+                logger.info("Linking growthzone user by email (%s) (%s)",
+                            email, user)
+    return user
 
 
 @view_config(name=LOGON_GROWTHZONE,
@@ -237,7 +262,13 @@ def growthzone_oauth2(request):
                                                 request.cookies.get('growthzone.failure'),
                                                 error=_(u'Invalid user info.'))
         external_id = str(user_info.get('sub'))
-        user = get_user_for_growthzone_id(external_id)
+
+        try:
+            user = _get_user(external_id, user_info.get('email'))
+        except AmbiguousUserLookupError:
+            return _create_failure_response(request,
+                                            request.cookies.get('growthzone.failure'),
+                                            error=_(u'Multiple users found for this email address.'))
         if user is None:
             username = generate_username()
             interface.alsoProvides(request, INoAccountCreationEmail)
