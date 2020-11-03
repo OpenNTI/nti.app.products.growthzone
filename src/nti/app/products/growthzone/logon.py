@@ -163,6 +163,7 @@ def _get_user(external_id, email):
                             email, found_users)
                 raise AmbiguousUserLookupError()
             else:
+                # XXX: What if email address is unverified?
                 user = found_users[0]
                 logger.info("Linking growthzone user by email (%s) (%s)",
                             email, user)
