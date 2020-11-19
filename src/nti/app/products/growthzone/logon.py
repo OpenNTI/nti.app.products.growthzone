@@ -33,6 +33,8 @@ from zope.event import notify
 
 from nti.app.products.growthzone import MessageFactory as _
 
+from nti.app.products.growthzone.enrollment import update_enrollments
+
 from nti.app.products.growthzone.interfaces import IGrowthZoneUser
 from nti.app.products.growthzone.interfaces import IGrowthZoneUserProfile
 from nti.app.products.growthzone.interfaces import IGrowthZoneLogonSettings
@@ -288,6 +290,7 @@ def growthzone_oauth2(request):
             notify(GrowthZoneUserCreatedEvent(user, request))
             request.environ['nti.request_had_transaction_side_effects'] = 'True'
 
+        update_enrollments(user, access_token, auth_settings)
         interface.alsoProvides(user, IGrowthZoneUser)
         profile = IUserProfile(user)
         interface.alsoProvides(profile, IGrowthZoneUserProfile)

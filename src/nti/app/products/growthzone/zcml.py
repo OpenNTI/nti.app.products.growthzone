@@ -17,12 +17,9 @@ from pyramid.interfaces import IRequest
 from zope import interface
 
 from zope.component.zcml import utility
-from zope.component.zcml import adapter
 from zope.component.zcml import subscriber
 
 from zope.schema import TextLine
-
-from zope.traversing.interfaces import IPathAdapter
 
 from nti.app.products.growthzone.interfaces import IGrowthZoneLogonSettings
 
@@ -30,9 +27,6 @@ from nti.app.products.growthzone.logon import SimpleMissingUserGrowthZoneLinkPro
 from nti.app.products.growthzone.logon import SimpleUnauthenticatedUserGrowthZoneLinkProvider
 
 from nti.app.products.growthzone.model import GrowthZoneLogonSettings
-
-from nti.appserver.account_creation_views import DenyAccountCreatePathAdapter
-from nti.appserver.account_creation_views import DenyAccountCreatePreflightPathAdapter
 
 from nti.appserver.interfaces import ILogonLinkProvider
 from nti.appserver.interfaces import IUnauthenticatedUserLinkProvider
@@ -43,9 +37,6 @@ from nti.common.cypher import get_plaintext
 
 from nti.coremetadata.interfaces import IMissingUser
 
-from nti.dataserver.interfaces import IDataserverFolder
-
-from nti.schema.field import Bool
 from nti.schema.field import HTTPURL
 
 logger = __import__('logging').getLogger(__name__)
@@ -68,6 +59,12 @@ class IRegisterGrowthZoneLogonSettings(interface.Interface):
     user_info_url = HTTPURL(title=u'The url to fetch user information',
                         required=True)
 
+    company_purchases_url = HTTPURL(title=u'The url to fetch purchases for a company',
+                                    required=True)
+
+    aboutme_url = HTTPURL(title=u'The url to fetch additional user information',
+                          required=True)
+
     logon_link_title = TextLine(title=u'The logon link title',
                                 required=False)
 
@@ -76,6 +73,8 @@ def registerGrowthZoneLogonSettings(_context, client_id,
                                     client_secret,
                                     login_url,
                                     user_info_url,
+                                    company_purchases_url,
+                                    aboutme_url,
                                     token_url, logon_link_title):
     """
     Register growthzone logon settings, including link providers. Disables
@@ -86,6 +85,8 @@ def registerGrowthZoneLogonSettings(_context, client_id,
                                 client_secret=get_plaintext(client_secret),
                                 login_url=login_url,
                                 user_info_url=user_info_url,
+                                company_purchases_url=company_purchases_url,
+                                aboutme_url=aboutme_url,
                                 token_url=token_url,
                                 logon_link_title=logon_link_title)
     utility(_context, provides=IGrowthZoneLogonSettings, factory=factory)
