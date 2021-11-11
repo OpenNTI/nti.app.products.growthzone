@@ -50,6 +50,12 @@ class IGrowthZoneLogonSettings(interface.Interface):
     user_info_url = HTTPURL(title=u'The url to fetch user information',
                             required=True)
 
+    company_purchases_url = HTTPURL(title=u'The url to fetch purchases for a company',
+                                    required=True)
+
+    aboutme_url = HTTPURL(title=u'The url to fetch additional user information',
+                          required=True)
+
     logon_link_title = TextLine(title=u'The logon link title',
                                 required=False)
 

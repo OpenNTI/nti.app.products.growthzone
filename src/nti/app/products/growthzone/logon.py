@@ -31,7 +31,11 @@ from zope import component
 
 from zope.event import notify
 
+from nti.app.authentication import user_can_login
+
 from nti.app.products.growthzone import MessageFactory as _
+
+from nti.app.products.growthzone.enrollment import update_enrollments
 
 from nti.app.products.growthzone.interfaces import IGrowthZoneUser
 from nti.app.products.growthzone.interfaces import IGrowthZoneUserProfile
@@ -288,6 +292,11 @@ def growthzone_oauth2(request):
             notify(GrowthZoneUserCreatedEvent(user, request))
             request.environ['nti.request_had_transaction_side_effects'] = 'True'
 
+        if not user_can_login(user):
+            return _create_failure_response(request,
+                                request.cookies.get('growthzone.failure'),
+                                error=_(u'User cannot login.'))
+        update_enrollments(user, access_token, auth_settings)
         interface.alsoProvides(user, IGrowthZoneUser)
         profile = IUserProfile(user)
         interface.alsoProvides(profile, IGrowthZoneUserProfile)
